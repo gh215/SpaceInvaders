@@ -8,16 +8,26 @@ void PlayerShip::draw(Screen& screen)
     screen.put('^', { position.x + 1, position.y + 1 });
 }
 
-void PlayerShip::move(char direction)
+void PlayerShip::move()
 {
     Screen screen;
 
-    if (direction == LEFT && position.x > 1) 
+    if (direction == Dir::LEFT && position.x > 1) 
     {
         position.x--;
     }
-    else if (direction == RIGHT && position.x < FIELD_WIDTH - 2) 
+    else if (direction == Dir::RIGHT && position.x < FIELD_WIDTH - 2) 
     {
         position.x++;
+    }
+}
+
+void PlayerShip::tryShoot()
+{
+    double currentTime = globalClock.getTicks() / 10.0;
+    if (canShoot(currentTime))
+    {
+        shoot = true;
+        updateLastShotTime(currentTime);
     }
 }

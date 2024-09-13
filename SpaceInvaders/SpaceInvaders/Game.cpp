@@ -3,6 +3,12 @@
 void Game::update()
 {
 	moveAliens();
+	playerShip.move();
+	if (playerShip.hasShot())
+	{
+		playerBullets.push_back(Bullet(playerShip.getPosition(), false));
+	}
+	moveBullets();
 }
 
 void Game::moveAliens()
@@ -35,6 +41,10 @@ void Game::moveAliens()
 		for (Alien& alien : aliens)
 		{
 			alien.move();
+			if (alien.tryShoot(alien.getPosition(), aliens, globalClock.getTicks() / 10.0))
+			{
+				alienBullets.push_back(Bullet({ alien.getPosition().x, alien.getPosition().y + 1 }, true));
+			}
 		}
 	}
 }
@@ -60,17 +70,28 @@ void Game::processInput()
 		if (key == ARROW)
 		{
 			key = _getch();
-			if (key == LEFT || key == RIGHT)
+			if (key == LEFT)
 			{
-				playerShip.move(key);
+				playerShip.setDir(Dir::LEFT);
+			}
+			if (key == RIGHT)
+			{
+				playerShip.setDir(Dir::RIGHT);
 			}
 		}
+		else if (key == ' ')
+		{
+			playerShip.tryShoot();
+		}
+	}
+	else
+	{
+		playerShip.setDir(Dir::STOP);
 	}
 }
 
 void Game::createAlienGrid()
 {
-	// Создаем инопланетян в виде сетки: 10 по горизонтали и 3 по вертикали
 	for (int row = 0; row < ALIEN_ROWS; row++)
 	{
 		for (int col = 0; col < ALIEN_COLUMNS; col++)
@@ -78,6 +99,37 @@ void Game::createAlienGrid()
 			int x = ALIEN_INITIAL_POS + col * ALIEN_INTERVAL;
 			int y = ALIEN_INITIAL_POS + row * (ALIEN_INTERVAL - 2); 
 			aliens.push_back(Alien(x, y));
+		}
+	}
+}
+
+void Game::moveBullets()
+{
+	for (auto it = playerBullets.begin(); it != playerBullets.end();)
+	{
+		it->move();
+
+		if (it->isOutOfBounds())
+		{
+			it = playerBullets.erase(it);
+		}
+		else
+		{
+			++it;
+		}
+	}
+
+	for (auto it = alienBullets.begin(); it != alienBullets.end();)
+	{
+		it->move();
+
+		if (it->isOutOfBounds())
+		{
+			it = alienBullets.erase(it);
+		}
+		else
+		{
+			++it;
 		}
 	}
 }
@@ -93,11 +145,16 @@ void Game::draw()
 	}
 
 	screen.draw();
-	//
-	//    for (auto& bullet : playerBullets) 
-	//    {
-	//        bullet.draw();
-	//    }
+
+	for (auto& bullet : playerBullets) 
+	{
+		bullet.draw(screen);
+	}
+
+	for (auto& bullet : alienBullets)
+	{
+		bullet.draw(screen);
+	}
 	//
 	//    for (auto& blast : blasts) 
 	//    {
