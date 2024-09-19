@@ -11,12 +11,19 @@ void Screen::showConsoleCursor(bool showFlag)
 
 void Screen::drawBorders()
 {
-	for (int x = 0; x < FIELD_WIDTH; ++x)
+	string status = "Score: " + to_string(score) + "                                            " 
+		+ "Lives: " + to_string(lives);
+	for (int i = 0; i < status.size(); ++i)
 	{
-		put('-', { x, 0 });
+		put(status[i], { i, 0 });  
 	}
 
-	for (int y = 1; y < FIELD_HEIGHT - 1; ++y)
+	for (int x = 0; x < FIELD_WIDTH; ++x)
+	{
+		put('-', { x, 1 });
+	}
+
+	for (int y = 2; y < FIELD_HEIGHT - 1; ++y)
 	{
 		put('|', { 0, y });
 		put('|', { FIELD_WIDTH - 1, y });

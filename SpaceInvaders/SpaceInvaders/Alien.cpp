@@ -36,3 +36,26 @@ void Alien::move()
 		position.x++;
 	}
 }
+
+bool Alien::isOnFire(vector<Alien>& aliens)
+{
+	// ѕровер€ем, есть ли инопланет€нин ниже текущего
+	for (Alien& alien : aliens)
+	{
+		// ≈сли инопланет€нин находитс€ пр€мо перед текущим инопланет€нином
+		if (alien.getIsAlive() && alien.getPosition().x == position.x && alien.getPosition().y > position.y)
+		{
+			return true; // ѕеред кораблЄм есть другой корабль
+		}
+	}
+	return false; 
+}
+
+bool Alien::tryShoot(vector<Alien>& aliens)
+{
+	if ((rand() % 100) < 1 && !isOnFire(aliens))
+	{
+		return true;
+	}
+	return false;
+}

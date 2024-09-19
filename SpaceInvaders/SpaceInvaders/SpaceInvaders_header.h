@@ -17,15 +17,20 @@ const int FIELD_HEIGHT = 20;
 const int ARROW = 224;
 const int LEFT = 75;
 const int RIGHT = 77;
+const int STOP = 0;
+const int SCORE_FOR_SHIP = 100;
+const double SHOOT_COOLDOWN = 1.5;
+const double ALIEN_SHOOT_COOLDOWN = 3.5;
 const int ALIEN_INITIAL_POS = 1;
-const int ALIEN_INTERVAL = 4;
+const int ALIEN_H_INTERVAL = 4;
+const int ALIEN_V_INTERVAL = 2;
 const int ALIEN_PERIOD = 10;
 const int MAX_LIVES = 3;
 const int ALIEN_ROWS = 3;
 const int PLAYER_LIVES = 3;
 const int DEFENDED_ZONE = 3;
 const int ALIEN_COLUMNS = 7;
-const int BULLET_PERIOD = 1;
+const int PLAYER_BULLET_PERIOD = 4;
 const int SLEEP = 50;
 
 struct Point
@@ -34,7 +39,7 @@ struct Point
 	int y;
 };
 
-enum class Dir { RIGHT, LEFT };
+enum class Dir { RIGHT, LEFT, STOP };
 enum class Dir_bull { UP, DOWN };
 
 class Clock
@@ -62,8 +67,15 @@ private:
 		cout << symb;
 	}
 	void showConsoleCursor(bool showFlag);
+	int score;
+	int lives;
 public:
-	Screen() { clear(); showConsoleCursor(false); }
+	Screen() : score(0), lives(3) { clear(); showConsoleCursor(false); }
+	void setScoreAndLives(int newScore, int newLives)
+	{
+		score = newScore;
+		lives = newLives;
+	}
 	bool put(char symb, Point p)
 	{
 		if (p.x < 0 || p.x > FIELD_WIDTH - 1) return false;
@@ -106,17 +118,45 @@ class PlayerShip
 private:
 	Point position;
 	bool isInvinsible;
+	Dir direction;
 	int lives;
 	int invinsible_timer;
+	double lastShotTime;
+	bool shoot;
 public:
 	PlayerShip()
 	{
 		position = { FIELD_WIDTH / 2, FIELD_HEIGHT - DEFENDED_ZONE };
+		direction = Dir::STOP;
 		isInvinsible = false;
 		invinsible_timer = 0;
 		lives = PLAYER_LIVES;
+		lastShotTime = 0;
+		shoot = false;
 	};
-	void move(char direction);
+	void move();
+	void setDir(Dir dir)
+	{
+		direction = dir;
+	}
+	bool canShoot(double currentTime)
+	{
+		return (currentTime - lastShotTime) >= SHOOT_COOLDOWN;
+	}
+	void updateLastShotTime(double currentTime)
+	{
+		lastShotTime = currentTime;
+	}
+	void tryShoot();
+	bool hasShot()
+	{
+		if (shoot)
+		{
+			shoot = false;
+			return true;
+		}
+		return false;
+	}
 	void draw(Screen& screen);
 	Point getPosition() { return position; }
 	void setInvinsible(bool inv)
@@ -133,7 +173,7 @@ private:
 	bool isAlive;
 	Dir currentDirection;
 public:
-	Alien(int x, int y) : position({ x, y }), isAlive(true), currentDirection(Dir::LEFT) {}
+	Alien(int x, int y) : position({ x, y }), isAlive(true), currentDirection(Dir::LEFT){}
 	void drop();
 	void draw(Screen& screen);
 	void move();
@@ -149,12 +189,13 @@ public:
 		}
 	}
 	bool isHit(const Point& bulletPosition);
-	bool isOnFire(Point position);
+	bool isOnFire(vector<Alien>& aliens);
+	bool tryShoot(vector<Alien>& aliens);
 	bool getIsAlive() { return isAlive; }
 	bool isOnEdge()
 	{
-		if ((currentDirection == Dir::RIGHT && position.x >= FIELD_WIDTH - 2) ||
-			(currentDirection == Dir::LEFT && position.x <= 1))
+		if ((currentDirection == Dir::RIGHT && position.x >= FIELD_WIDTH - 3) ||
+			(currentDirection == Dir::LEFT && position.x <= 2))
 		{
 			return true;
 		}
@@ -168,7 +209,7 @@ class Bullet
 private:
 	Point position;
 	Dir_bull direction;
-	int period = BULLET_PERIOD;
+	int period = PLAYER_BULLET_PERIOD;
 	char symb;
 	bool isEnemy;
 public:
@@ -182,9 +223,8 @@ public:
 		direction = Dir_bull::UP;
 	}
 	void move();
-	void draw();
+	void draw(Screen& screen);
 	bool isOutOfBounds();
-	//Сделать рандомное время выстрелов
 	Point getPosition() { return position; }
 };
 
@@ -208,12 +248,10 @@ private:
 	vector<Bullet> alienBullets;
 	vector<Blast> blasts;
 	Screen screen;
-	int score;
-	int lives;
 public:
-	Game() : score(0), lives(3) {}
 	void draw();
 	void createAlienGrid();
+	void moveBullets();
 	void moveAliens();
 	void run();
 	void processInput();
