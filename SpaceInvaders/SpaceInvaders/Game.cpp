@@ -1,5 +1,7 @@
 #include "SpaceInvaders_header.h"
 
+Clock globalClock;
+
 void Game::update()
 {
 	moveAliens();
@@ -41,7 +43,7 @@ void Game::moveAliens()
 		for (Alien& alien : aliens)
 		{
 			alien.move();
-			if (alien.tryShoot(alien.getPosition(), aliens, globalClock.getTicks() / 10.0))
+			if (alien.tryShoot(aliens))
 			{
 				alienBullets.push_back(Bullet({ alien.getPosition().x, alien.getPosition().y + 1 }, true));
 			}
@@ -96,8 +98,8 @@ void Game::createAlienGrid()
 	{
 		for (int col = 0; col < ALIEN_COLUMNS; col++)
 		{
-			int x = ALIEN_INITIAL_POS + col * ALIEN_INTERVAL;
-			int y = ALIEN_INITIAL_POS + row * (ALIEN_INTERVAL - 2); 
+			int x = ALIEN_INITIAL_POS + col * ALIEN_H_INTERVAL;
+			int y = ALIEN_INITIAL_POS + row * ALIEN_V_INTERVAL;
 			aliens.push_back(Alien(x, y));
 		}
 	}

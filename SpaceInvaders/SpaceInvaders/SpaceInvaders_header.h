@@ -22,7 +22,8 @@ const int SCORE_FOR_SHIP = 100;
 const double SHOOT_COOLDOWN = 1.5;
 const double ALIEN_SHOOT_COOLDOWN = 3.5;
 const int ALIEN_INITIAL_POS = 1;
-const int ALIEN_INTERVAL = 4;
+const int ALIEN_H_INTERVAL = 4;
+const int ALIEN_V_INTERVAL = 2;
 const int ALIEN_PERIOD = 10;
 const int MAX_LIVES = 3;
 const int ALIEN_ROWS = 3;
@@ -171,9 +172,8 @@ private:
 	Point position;
 	bool isAlive;
 	Dir currentDirection;
-	double lastShotTime;
 public:
-	Alien(int x, int y) : position({ x, y }), isAlive(true), currentDirection(Dir::LEFT), lastShotTime(0.0) {}
+	Alien(int x, int y) : position({ x, y }), isAlive(true), currentDirection(Dir::LEFT){}
 	void drop();
 	void draw(Screen& screen);
 	void move();
@@ -189,13 +189,13 @@ public:
 		}
 	}
 	bool isHit(const Point& bulletPosition);
-	bool isOnFire(Point position, vector<Alien>& aliens);
-	bool tryShoot(Point position, vector<Alien>& aliens, double currentTime);
+	bool isOnFire(vector<Alien>& aliens);
+	bool tryShoot(vector<Alien>& aliens);
 	bool getIsAlive() { return isAlive; }
 	bool isOnEdge()
 	{
-		if ((currentDirection == Dir::RIGHT && position.x >= FIELD_WIDTH - 2) ||
-			(currentDirection == Dir::LEFT && position.x <= 1))
+		if ((currentDirection == Dir::RIGHT && position.x >= FIELD_WIDTH - 3) ||
+			(currentDirection == Dir::LEFT && position.x <= 2))
 		{
 			return true;
 		}
@@ -225,7 +225,6 @@ public:
 	void move();
 	void draw(Screen& screen);
 	bool isOutOfBounds();
-	//Сделать рандомное время выстрелов
 	Point getPosition() { return position; }
 };
 

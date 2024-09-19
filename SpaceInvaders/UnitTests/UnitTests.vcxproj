@@ -115,6 +115,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <AdditionalLibraryDirectories>$(VCInstallDir)UnitTest\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>..\SpaceInvaders\x64\Debug\Alien.obj;..\SpaceInvaders\x64\Debug\Game.obj;..\SpaceInvaders\x64\Debug\Screen.obj;..\SpaceInvaders\x64\Debug\Bullet.obj;..\SpaceInvaders\x64\Debug\PlayerShip.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

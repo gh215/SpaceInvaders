@@ -37,15 +37,13 @@ void Alien::move()
 	}
 }
 
-bool Alien::isOnFire(Point position, vector<Alien>& aliens)
+bool Alien::isOnFire(vector<Alien>& aliens)
 {
 	// ѕровер€ем, есть ли инопланет€нин ниже текущего
 	for (Alien& alien : aliens)
 	{
 		// ≈сли инопланет€нин находитс€ пр€мо перед текущим инопланет€нином
-		if (alien.getIsAlive() && alien.getPosition().x == position.x && alien.getPosition().y > position.y &&
-			//предотвращает стрельбу инопланет€н, которые наход€тс€ слишком близко к нижней границе пол€
-			alien.getPosition().y < FIELD_HEIGHT - DEFENDED_ZONE)
+		if (alien.getIsAlive() && alien.getPosition().x == position.x && alien.getPosition().y > position.y)
 		{
 			return true; // ѕеред кораблЄм есть другой корабль
 		}
@@ -53,13 +51,10 @@ bool Alien::isOnFire(Point position, vector<Alien>& aliens)
 	return false; 
 }
 
-bool Alien::tryShoot(Point position, vector<Alien>& aliens, double currentTime)
+bool Alien::tryShoot(vector<Alien>& aliens)
 {
-	if (currentTime - lastShotTime < ALIEN_SHOOT_COOLDOWN + (rand() % 100) / 100.0) return false;
-	// √енерируем случайное число от 0 до 99
-	if (rand() % 100 < 5 && !isOnFire(position, aliens)) // Ќапример, 5% шанс на выстрел
+	if ((rand() % 100) < 1 && !isOnFire(aliens))
 	{
-		lastShotTime = currentTime;
 		return true;
 	}
 	return false;
