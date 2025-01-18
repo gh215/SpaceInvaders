@@ -2,10 +2,13 @@
 
 void PlayerShip::draw(Screen& screen)
 {
-    screen.put('^', { position.x , position.y });
-    screen.put('^', { position.x - 1, position.y + 1 });
-    screen.put('^', { position.x, position.y + 1 });
-    screen.put('^', { position.x + 1, position.y + 1 });
+    if (!isInvincible || (globalClock.getTicks() / 5) % 4 == 0)
+    {
+        screen.put('^', { position.x , position.y });
+        screen.put('^', { position.x - 1, position.y + 1 });
+        screen.put('^', { position.x, position.y + 1 });
+        screen.put('^', { position.x + 1, position.y + 1 });
+    }
 }
 
 void PlayerShip::move()
@@ -30,4 +33,23 @@ void PlayerShip::tryShoot()
         shoot = true;
         updateLastShotTime(currentTime);
     }
+}
+
+bool PlayerShip::isHit(Point bulletPosition)
+{
+    if (!isInvincible &&
+        bulletPosition.x >= position.x - 1 && bulletPosition.x <= position.x + 1 &&
+        bulletPosition.y >= position.y && bulletPosition.y <= position.y + 1)
+    {
+        lives--;
+        isInvincible = true;
+        invinsible_timer = INVINCIBLE_TIME * 1000 / SLEEP;
+        return true;
+    }
+    return false;
+}
+void PlayerShip::updateInvincibility(double currentTime)
+{
+    if (isInvincible) invinsible_timer--;
+    if (invinsible_timer == 0) isInvincible = false;
 }

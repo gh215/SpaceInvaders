@@ -145,7 +145,7 @@
     <ClCompile Include="PlayerShip.cpp" />
     <ClCompile Include="Screen.cpp" />
     <ClCompile Include="SpaceInvaders_main.cpp" />
-    <ClCompile Include="Ultil.cpp" />
+    <ClCompile Include="Blasts.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SpaceInvaders_header.h" />

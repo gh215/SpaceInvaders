@@ -1,10 +1,16 @@
 #include "SpaceInvaders_header.h"
 
-bool Alien::isHit(const Point& bulletPosition)
+bool Alien::isHit(const Point& bulletPosition, vector<Blast>& blasts)
 {
-	if (bulletPosition.x == position.x && bulletPosition.y == position.y)
+	if (isAlive && bulletPosition.x >= position.x - 1 && bulletPosition.x <= position.x + 1 &&
+		bulletPosition.y >= position.y && bulletPosition.y <= position.y + 1)
 	{
-		isAlive = false;
+		hitsTaken++;
+		if (hitsTaken == 2)
+		{
+			isAlive = false;
+			blasts.push_back(Blast(position));
+		}
 		return true;
 	}
 	return false;
@@ -53,7 +59,7 @@ bool Alien::isOnFire(vector<Alien>& aliens)
 
 bool Alien::tryShoot(vector<Alien>& aliens)
 {
-	if ((rand() % 100) < 1 && !isOnFire(aliens))
+	if ((rand() % ALIEN_SHOOT_PARAM) < 1 && !isOnFire(aliens))
 	{
 		return true;
 	}

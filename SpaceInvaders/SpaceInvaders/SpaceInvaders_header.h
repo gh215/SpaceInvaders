@@ -25,13 +25,16 @@ const int ALIEN_INITIAL_POS = 1;
 const int ALIEN_H_INTERVAL = 4;
 const int ALIEN_V_INTERVAL = 2;
 const int ALIEN_PERIOD = 10;
-const int MAX_LIVES = 3;
+const int INVINCIBLE_TIME = 5;
 const int ALIEN_ROWS = 3;
 const int PLAYER_LIVES = 3;
 const int DEFENDED_ZONE = 3;
 const int ALIEN_COLUMNS = 7;
 const int PLAYER_BULLET_PERIOD = 4;
-const int SLEEP = 50;
+const int SLEEP = 25;
+const int PAUSE_LOWER = 112;
+const int PAUSE_UPPER = 80;
+const int ALIEN_SHOOT_PARAM = 100;
 
 struct Point
 {
@@ -76,6 +79,7 @@ public:
 		score = newScore;
 		lives = newLives;
 	}
+	int getScore() { return score; }
 	bool put(char symb, Point p)
 	{
 		if (p.x < 0 || p.x > FIELD_WIDTH - 1) return false;
@@ -110,14 +114,60 @@ public:
 		}
 	}
 	void drawBorders();
+	void clearPauseMessage();
+	void boardMessage(string message);
+	void showPauseMessage();
+	void showGameOverMessage();
+	void showWonMessage();
+	void moveCursorToBottom();
 };
 
+class Blast
+{
+private:
+	Point position;
+	int lifetime;
+	int blinkInterval;
+public:
+	Blast(Point pos) : position(pos), lifetime(60), blinkInterval(2) {}
+	void move(Dir direction)
+	{
+		if (globalClock.getTicks() % 10 == 0)
+		{
+			if (direction == Dir::LEFT)
+			{
+				position.x--;
+			}
+			else if (direction == Dir::RIGHT)
+			{
+				position.x++;
+			}
+		}
+	}
+	void draw(Screen& screen)
+	{
+		if ((lifetime / blinkInterval) % 2 == 0)
+		{
+			screen.put('*', { position.x - 1, position.y - 1 });
+			screen.put('|', { position.x, position.y - 1 });
+			screen.put('*', { position.x + 1, position.y - 1 });
+			screen.put('-', { position.x - 1, position.y });
+			screen.put('x', position);
+			screen.put('-', { position.x + 1, position.y });
+			screen.put('*', { position.x - 1, position.y + 1 });
+			screen.put('|', { position.x, position.y + 1 });
+			screen.put('*', { position.x + 1, position.y + 1 });
+		}
+	}
+	bool isAlive() { return lifetime > 0; }
+	int tick() { return lifetime--; };
+};
 
 class PlayerShip
 {
 private:
 	Point position;
-	bool isInvinsible;
+	bool isInvincible;
 	Dir direction;
 	int lives;
 	int invinsible_timer;
@@ -128,7 +178,7 @@ public:
 	{
 		position = { FIELD_WIDTH / 2, FIELD_HEIGHT - DEFENDED_ZONE };
 		direction = Dir::STOP;
-		isInvinsible = false;
+		isInvincible = false;
 		invinsible_timer = 0;
 		lives = PLAYER_LIVES;
 		lastShotTime = 0;
@@ -159,10 +209,13 @@ public:
 	}
 	void draw(Screen& screen);
 	Point getPosition() { return position; }
+	int getLives() { return lives; }
+	bool isHit(Point bulletPosition);
+	void updateInvincibility(double currentTime);
 	void setInvinsible(bool inv)
 	{
-		isInvinsible = true;
-		invinsible_timer = 3;
+		isInvincible = true;
+		invinsible_timer = 5;
 	};
 };
 
@@ -171,9 +224,10 @@ class Alien
 private:
 	Point position;
 	bool isAlive;
+	int hitsTaken;
 	Dir currentDirection;
 public:
-	Alien(int x, int y) : position({ x, y }), isAlive(true), currentDirection(Dir::LEFT){}
+	Alien(int x, int y) : position({ x, y }), isAlive(true), hitsTaken(0), currentDirection(Dir::LEFT) {}
 	void drop();
 	void draw(Screen& screen);
 	void move();
@@ -188,10 +242,9 @@ public:
 			currentDirection = Dir::LEFT;
 		}
 	}
-	bool isHit(const Point& bulletPosition);
+	bool isHit(const Point& bulletPosition, vector<Blast>& blasts);
 	bool isOnFire(vector<Alien>& aliens);
 	bool tryShoot(vector<Alien>& aliens);
-	bool getIsAlive() { return isAlive; }
 	bool isOnEdge()
 	{
 		if ((currentDirection == Dir::RIGHT && position.x >= FIELD_WIDTH - 3) ||
@@ -201,7 +254,9 @@ public:
 		}
 		return false;
 	}
+	bool getIsAlive() const { return isAlive; }
 	Point getPosition() { return position; }
+	Dir getDirection() { return currentDirection; }
 };
 
 class Bullet
@@ -228,17 +283,6 @@ public:
 	Point getPosition() { return position; }
 };
 
-class Blast
-{
-private:
-	Point position;
-	int lifetime;
-public:
-	void draw();
-	int tick() { return lifetime--; };
-	Blast(Point pos);
-};
-
 class Game
 {
 private:
@@ -252,9 +296,12 @@ public:
 	void draw();
 	void createAlienGrid();
 	void moveBullets();
+	void removeDeadAliens();
 	void moveAliens();
 	void run();
 	void processInput();
 	void update();
+	void checkPause();
+	bool isAlienOnDefZone();
 };
 
